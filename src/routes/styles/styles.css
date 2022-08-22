@@ -1,0 +1,84 @@
+.headerDiv {
+  padding: 25px 25px 25px 25px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.contentWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.link {
+  padding: 25px;
+  display: flex;
+  text-decoration: none;
+}
+
+.active {
+  background-color: #f1f1f1;
+}
+
+.shadow {
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.comment {
+  display: flex;
+  flex-direction: row;
+  background-color: white;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+}
+
+.btn {
+  background-color: white;
+}
+
+.btn {
+  border: none;
+  color: black;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  text-decoration: none;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  text-align: center;
+}
+
+button:active {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+.content {
+  padding: 25px;
+  display: flex;
+  gap: 25px;
+}
+.card {
+  align-self: center;
+  display: flex;
+  width: 50%;
+  flex-direction: column;
+  background-color: white;
+  padding: 25px;
+}
+.submitBtn {
+  background-color: #44e170;
+}
+.cancelBtn {
+  background-color: #e14444;
+}
+
+.input {
+  display: flex;
+  padding: 20px;
+  border: none;
+}
