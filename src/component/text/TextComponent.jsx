@@ -11,9 +11,9 @@ const Title = (props) => {
 
 const Subtitle = (props) => {
   return (
-    <h2 className="subtitle" style={props.style}>
+    <p className="subtitle" style={props.style}>
       {props.children}
-    </h2>
+    </p>
   );
 };
 

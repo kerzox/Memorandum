@@ -22,7 +22,7 @@
 }
 
 .shadow {
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
 }
 
 .comment {
@@ -81,4 +81,23 @@ button:active {
   display: flex;
   padding: 20px;
   border: none;
+  color: white;
+}
+
+::placeholder {
+  /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: #858585;
+  opacity: 1; /* Firefox */
+}
+
+.bg-dark {
+  background-color: #1f1f1f;
+}
+
+.bg-black {
+  background-color: #0a0a0a;
+}
+
+.bg-blue {
+  background-color: rgb(35, 123, 255);
 }
