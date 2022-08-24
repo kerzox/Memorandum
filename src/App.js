@@ -9,6 +9,8 @@ import { Title } from "./component/text/TextComponent";
 import Input from "./component/input";
 import Button from "./component/button";
 import FriendModal from "./component/friendModal";
+import nacl from "tweetnacl";
+import KeyAlert from "./component/key/alert";
 
 function App() {
   const [socket, setSocket] = useState(null);
@@ -17,6 +19,9 @@ function App() {
   const [registerVisible, setRegisterVisible] = useState(false);
   const [friendModal, toggleFriendModal] = useState(false);
   const [friendModal2, toggleFriendModal2] = useState(false);
+
+  const [alert, toggleAlert] = useState(false);
+  const [keys, setKeys] = useState();
 
   const [onEvent, updateEvents] = useState({
     type: "",
@@ -63,6 +68,7 @@ function App() {
 
   const register = async () => {
     try {
+      const pair = nacl.box.keyPair();
       let res = await fetch("http://neat.servebeer.com:25565/users/register", {
         method: "POST",
         headers: {
@@ -72,12 +78,15 @@ function App() {
         body: JSON.stringify({
           username: form.username,
           password: form.password,
+          publicKey: pair.publicKey,
         }),
       });
       const data = await res.json();
 
+      console.log(data);
+
       if (res.status === 201) {
-        alert("Succesfully registered an account");
+        setKeys(pair);
       } else {
         alert(data.message);
       }
@@ -105,6 +114,12 @@ function App() {
       );
     }
   }, [selectedConversationId]);
+
+  useEffect(() => {
+    if (keys !== undefined) {
+      toggleAlert(true);
+    }
+  }, [keys]);
 
   return (
     <BrowserRouter>
@@ -206,6 +221,7 @@ function App() {
                 </Button>
               </div>
             </div>
+            <KeyAlert content={keys} visible={alert} setVisible={toggleAlert} />
           </div>
         ) : (
           <div

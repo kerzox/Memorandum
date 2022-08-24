@@ -5,10 +5,12 @@ import Input from "../component/input";
 import Message from "../component/message";
 import { Subtitle } from "../component/text/TextComponent";
 import "../routes/styles/styles.css";
+import { UilLock } from "@iconscout/react-unicons";
 
 const Homepage = ({ conversation, profile, socket, onEvent }) => {
   const [messages, populateMessages] = useState([]);
   const [text, setText] = useState("");
+  const [lockColor, setLockColor] = useState("gray");
 
   const sendMessage = async (id) => {
     try {
@@ -99,7 +101,14 @@ const Homepage = ({ conversation, profile, socket, onEvent }) => {
               ></Message>
             ))}
           </div>
-          <div style={{ display: "flex", flexDirection: "row", padding: 25 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              padding: 25,
+              gap: 15,
+            }}
+          >
             <div style={{ display: "flex", flex: 1 }}>
               <Input
                 onChange={setText}
@@ -115,9 +124,25 @@ const Homepage = ({ conversation, profile, socket, onEvent }) => {
                 sendMessage(conversation?.conversation);
               }}
               className="bg-black"
-              style={{ width: "15%", color: "white" }}
+              style={{ width: "15%", color: "white", alignItems: "center" }}
             >
               Send
+            </Button>
+            <Button
+              onClick={() => {
+                if (lockColor == "gray") {
+                  return;
+                }
+              }}
+              className="bg-black"
+              style={{
+                width: 75,
+                color: "white",
+                alignItems: "center",
+                cursor: lockColor == "gray" ? "not-allowed" : "pointer",
+              }}
+            >
+              <UilLock color={lockColor} />
             </Button>
           </div>
         </>
