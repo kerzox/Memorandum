@@ -1,9 +1,58 @@
-import moment from "moment";
-import React from "react";
+import { clear } from "@testing-library/user-event/dist/clear";
+import moment from "moment-timezone";
+import React, { useEffect, useState } from "react";
 import Button from "../button";
 import { Subtitle, Title } from "../text/TextComponent";
 
-const Conversation = ({ friend, profile, openConversation }) => {
+const Conversation = ({
+  friend,
+  profile,
+  openConversation,
+  socket,
+  onlineUsers,
+}) => {
+  const [online, setOnline] = useState(false);
+  const [time, updateTime] = useState("");
+  const [intervalId, setIntervalId] = useState(0);
+
+  useEffect(() => {
+    if (friend !== undefined) {
+      socket.emit("get_user", friend.id, ({ user }) => {
+        if (user !== undefined) {
+          setOnline(true);
+        } else {
+          setOnline(false);
+          // const timerID = setInterval(() => {
+          //   updateTime(getDifference(moment(friend.lastOnline)));
+          //   setOnline(false);
+          // });
+          // setIntervalId(timerID);
+        }
+      });
+    }
+  }, [onlineUsers]);
+
+  useEffect(() => {
+    if (online) {
+      if (intervalId !== undefined) {
+        // console.log("turning timer off");
+        // clearInterval(intervalId);
+        // setIntervalId(undefined);
+      }
+    }
+  }, [online]);
+
+  // useEffect(() => {
+  //   console.log(time);
+  //   return () => clearInterval(intervalId);
+  // }, [intervalId]);
+
+  const getDifference = (time) => {
+    return moment
+      .utc(moment.duration(moment().diff(time)).as("milliseconds"))
+      .format("HH:mm:ss");
+  };
+
   return (
     <Button
       className="bg-dark"
@@ -16,19 +65,28 @@ const Conversation = ({ friend, profile, openConversation }) => {
       }}
     >
       <img
-        style={{ width: 80, height: 80, borderRadius: 64 }}
-        src="https://randomuser.me/api/portraits/men/11.jpg"
+        style={{ width: 80, height: 80, borderRadius: 80 }}
+        src={friend.profileImg === undefined ? "/pp.jpg" : friend.profileImg}
       ></img>
-      <div>
+      <div style={{ width: "100%" }}>
         <Title style={{ color: "white", lineHeight: 0 }}>
           {friend.username}
         </Title>
-        <div style={{ display: "flex", gap: 5 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 5,
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
           <Subtitle style={{ color: "#5C5C5C", lineHeight: 0 }}>
             Your friend
           </Subtitle>
-          <Subtitle style={{ color: "#9f9f9f", lineHeight: 0 }}>
-            last online: {moment().format("HH:mm")}
+          <Subtitle
+            style={{ color: online ? "#44e170" : "#5f5f5f", lineHeight: 0 }}
+          >
+            {online ? "Online" : `Offline`}
           </Subtitle>
         </div>
       </div>

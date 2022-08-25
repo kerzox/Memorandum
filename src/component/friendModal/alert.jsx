@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Button from "../button";
 import { Subtitle } from "../text/TextComponent";
 
-const NewFriendAlert = ({ request, update, profile }) => {
+const NewFriendAlert = ({ request, update, profile, socket }) => {
   const [visible, setVisible] = useState(true);
   console.log(visible);
 
@@ -27,6 +27,7 @@ const NewFriendAlert = ({ request, update, profile }) => {
       const data = await res.json();
       if (res.status === 201) {
         setVisible(false);
+
         update();
       }
     } catch (err) {

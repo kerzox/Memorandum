@@ -11,6 +11,8 @@ import Button from "../button";
 import { useState, useEffect } from "react";
 import Conversation from "../conversation";
 import NewFriendAlert from "../friendModal/alert";
+import KeyAlertPrivate from "../key/inputPrivate";
+import KeyAlert from "../key/alert";
 
 const NavbarComponent = ({
   chooseConversation,
@@ -18,9 +20,13 @@ const NavbarComponent = ({
   toggleFriendModal,
   socket,
   onEvent,
+  keyHandler,
+  keyAlert,
+  onlineUsers,
 }) => {
   const [friends, populateFriends] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
+  const [mode, switchMode] = useState({ mode: "default" });
 
   const createConversation = async (friendID, userId) => {
     try {
@@ -42,7 +48,9 @@ const NavbarComponent = ({
       const data = await res.json();
 
       if (res.status === 201) {
-        chooseConversation(data.conversation);
+        console.log(data);
+        chooseConversation(data.conversation.conversation);
+        openConversation(friendID, userId);
       }
     } catch (err) {
       console.log(err);
@@ -57,6 +65,7 @@ const NavbarComponent = ({
       const data = await res.json();
 
       if (res.status === 200) {
+        console.log(data.conversation);
         chooseConversation(data.conversation);
       } else if (res.status === 404) {
         createConversation(friendID, userId);
@@ -104,8 +113,11 @@ const NavbarComponent = ({
 
   useEffect(() => {
     if (onEvent?.type === "friend_request") {
-      console.log("hello");
-      getFriendRequests(profile.user.id);
+      if (onEvent?.data.response) {
+        getFriends(profile.user.id);
+      } else {
+        getFriendRequests(profile.user.id);
+      }
     }
   }, [onEvent]);
 
@@ -114,71 +126,110 @@ const NavbarComponent = ({
   }, []);
 
   return (
-    <div
-      style={{
-        backgroundColor: "#1F1F1F",
-        width: "550px",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          padding: 25,
-        }}
-      >
-        <Searchbar
-          placeholder={"Search messages"}
+    <>
+      {mode?.mode === "default" ? (
+        <div
           style={{
-            width: "100%",
-            backgroundColor: "#0A0A0A",
+            backgroundColor: "#1F1F1F",
+            width: "750px",
+            display: "flex",
+            flexDirection: "column",
+            overflowY: "scroll",
           }}
-        ></Searchbar>
-      </div>
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-        }}
-      >
-        <div>
-          <ul style={{ padding: 0, justifyContent: "none" }}>
-            <li
-              style={{
-                listStyle: "none",
-              }}
-            >
-              {friends.map((f) => (
-                <Conversation
-                  friend={f}
-                  profile={profile}
-                  openConversation={openConversation}
-                ></Conversation>
-              ))}
-            </li>
-          </ul>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", padding: 25 }}>
-          {friendRequests.map((r) => (
-            <NewFriendAlert
-              request={r}
-              profile={profile}
-              update={() => getFriends(profile.user.id)}
-            ></NewFriendAlert>
-          ))}
-          <Button
-            onClick={() => toggleFriendModal(true)}
-            className="bg-black"
-            style={{ color: "white" }}
+        >
+          <div
+            style={{
+              display: "flex",
+              padding: 25,
+            }}
+          ></div>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
           >
-            Add friends
-          </Button>
+            <div>
+              <ul style={{ padding: 0, justifyContent: "none" }}>
+                <li
+                  style={{
+                    listStyle: "none",
+                  }}
+                >
+                  {friends.map((f) => (
+                    <Conversation
+                      socket={socket}
+                      onlineUsers={onlineUsers}
+                      friend={f}
+                      profile={profile}
+                      openConversation={openConversation}
+                    ></Conversation>
+                  ))}
+                </li>
+              </ul>
+            </div>
+            <div
+              style={{ display: "flex", flexDirection: "column", padding: 25 }}
+            >
+              <KeyAlert
+                content={keyHandler.keys}
+                visible={
+                  keyAlert.alert1 && keyHandler.keys.private_key !== undefined
+                }
+                setVisible={keyAlert.toggleAlert}
+              />
+              <KeyAlertPrivate
+                socket={socket}
+                profile={profile}
+                keys={keyHandler.keys}
+                setKeys={keyHandler.setKeys}
+              />
+              {friendRequests.map((r) => (
+                <NewFriendAlert
+                  socket={socket}
+                  request={r}
+                  profile={profile}
+                  update={() => {
+                    getFriends(profile.user.id);
+                    console.log(socket);
+                    socket.emit("cause_event", {
+                      header: "refresh_user",
+                      type: "friend_request",
+                      recipient_id: r.id,
+                      data: {
+                        recipient_id: r.id,
+                        sender: profile.user.id,
+                        response: true,
+                      },
+                    });
+                  }}
+                ></NewFriendAlert>
+              ))}
+              <div style={{ display: "flex", gap: 15 }}>
+                <Button
+                  onClick={() => toggleFriendModal(true)}
+                  className="bg-black"
+                  style={{ color: "white" }}
+                >
+                  Add friends
+                </Button>
+                <Button
+                  onClick={() => toggleFriendModal(true)}
+                  className="bg-black"
+                  style={{ color: "white" }}
+                >
+                  Edit Profile
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      ) : (
+        <div></div>
+      )}
+    </>
   );
 };
 

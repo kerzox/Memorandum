@@ -33,11 +33,13 @@ const FriendModal = ({ visible, setVisible, profile, socket }) => {
         socket.emit("friend_request", {
           sender: profile.user,
           recipient_id: data.friend[0].id,
+          response: false,
         });
       } else if (res.status === 200) {
         socket.emit("friend_request", {
           sender: profile.user,
           recipient_id: data.friend[0].id,
+          response: false,
         });
       }
     } catch (err) {
@@ -53,7 +55,7 @@ const FriendModal = ({ visible, setVisible, profile, socket }) => {
       const data = await res.json();
 
       if (res.status === 200) {
-        populateUser(data.profile.username);
+        populateUser(data.profile);
       } else {
         alert(data.message);
       }
@@ -70,6 +72,7 @@ const FriendModal = ({ visible, setVisible, profile, socket }) => {
     <div
       className="shadow"
       style={{
+        backgroundColor: "#3f3f3f",
         width: 550,
         height: 325,
         position: "absolute",
@@ -102,11 +105,11 @@ const FriendModal = ({ visible, setVisible, profile, socket }) => {
           <div style={{ display: "flex", gap: 25 }}>
             <Input
               onChange={setValue}
-              className="bg-dark"
+              className="shadow bg-dark"
               style={{ width: "100%" }}
             ></Input>
             <Button
-              className="bg-dark"
+              className="shadow bg-dark"
               style={{ width: "50%", color: "white" }}
               onClick={() => getUser(value)}
             >
@@ -114,23 +117,37 @@ const FriendModal = ({ visible, setVisible, profile, socket }) => {
             </Button>
           </div>
           <div
-            className="bg-dark"
+            className="shadow bg-dark"
             style={{
-              padding: user !== undefined ? 0 : 25,
+              padding: user !== undefined ? 0 : 5,
             }}
           >
             {user && (
               <Button
                 onClick={() => addFriend(value)}
-                className="bg-dark"
-                style={{ color: "white" }}
+                className="shadow bg-dark"
+                style={{
+                  color: "white",
+                  flexDirection: "row",
+                  gap: 15,
+                  alignItems: "center",
+                }}
               >
-                {user}
+                <img
+                  style={{ width: 32, height: 32, borderRadius: 80 }}
+                  src={
+                    user.profileImg === undefined ? "/pp.jpg" : user.profileImg
+                  }
+                ></img>
+                {user.username}
               </Button>
             )}
           </div>
           <div>
-            <Button className="cancelBtn" onClick={() => setVisible(false)}>
+            <Button
+              className="shadow cancelBtn"
+              onClick={() => setVisible(false)}
+            >
               Close
             </Button>
           </div>

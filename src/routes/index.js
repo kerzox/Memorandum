@@ -6,11 +6,91 @@ import Message from "../component/message";
 import { Subtitle } from "../component/text/TextComponent";
 import "../routes/styles/styles.css";
 import { UilLock } from "@iconscout/react-unicons";
+import { encodeMessage, decodeMessage } from "../secure/secure";
 
-const Homepage = ({ conversation, profile, socket, onEvent }) => {
+const Homepage = ({
+  conversation,
+  profile,
+  socket,
+  onEvent,
+  keyHandler,
+  onlineUsers,
+}) => {
   const [messages, populateMessages] = useState([]);
   const [text, setText] = useState("");
   const [lockColor, setLockColor] = useState("gray");
+  const [secureMode, setSecure] = useState(false);
+
+  const getRecipient = () => {
+    if (conversation.participants[0].id !== profile.user.id)
+      return conversation.participants[0];
+    else return conversation.participants[1];
+  };
+
+  const sendEncryptedMessage = (id) => {
+    socket.emit(
+      "get_public_key",
+      {
+        sender_id: profile.user.id,
+        recipient: getRecipient().id,
+      },
+      (response) => {
+        socket.emit("send_message", {
+          text: encodeMessage(
+            response.data[0].publicKey,
+            keyHandler.keys.private_key,
+            text
+          ),
+          sender_id: profile.user.id,
+          recipient_id: getRecipient().id,
+          room: "conversation:" + conversation.conversation,
+        });
+        populateMessages([
+          ...messages,
+          {
+            sender_id: profile.user.id,
+            text: text,
+            encrypted: true,
+          },
+        ]);
+      }
+    );
+  };
+  /*
+
+  */
+
+  const getMessageFromSocket = (data) => {
+    if (data === undefined) return;
+    if (data?.from !== profile.user.id) {
+      try {
+        socket.emit(
+          "get_public_key",
+          {
+            sender_id: profile.user.id,
+            recipient: getRecipient().id,
+          },
+          (response) => {
+            let decoded = decodeMessage(
+              keyHandler.keys.private_key,
+              response.data[0].publicKey,
+              data.text
+            );
+            populateMessages([
+              ...messages,
+              {
+                sender_id: data.from,
+                text: decoded,
+                encrypted: true,
+              },
+            ]);
+          }
+        );
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  };
 
   const sendMessage = async (id) => {
     try {
@@ -23,7 +103,7 @@ const Homepage = ({ conversation, profile, socket, onEvent }) => {
         body: JSON.stringify({
           text: text,
           sender_id: profile.user.id,
-          recipient_id: conversation.participants[1],
+          recipient_id: conversation.participants[1].id,
         }),
       });
       const data = await res.json();
@@ -32,7 +112,7 @@ const Homepage = ({ conversation, profile, socket, onEvent }) => {
         socket.emit("send_message", {
           text: text,
           sender_id: profile.user.id,
-          recipient_id: conversation.participants[1],
+          recipient_id: conversation.participants[1].id,
           room: "conversation:" + conversation.conversation,
         });
         getMessages(id);
@@ -57,18 +137,54 @@ const Homepage = ({ conversation, profile, socket, onEvent }) => {
     }
   };
 
-  useEffect(() => {
-    if (conversation !== undefined) {
-      getMessages(conversation.conversation);
+  const isSecureModeAllowed = (conversation) => {
+    let both = 0;
+    conversation.participants.forEach((p) => {
+      onlineUsers.all_online_users.forEach((ou) => {
+        if (ou.username === p.username) {
+          both++;
+        }
+      });
+    });
+    if (both === 2) {
+      setLockColor("orange");
+    } else {
+      setLockColor("gray");
     }
+  };
+
+  useEffect(() => {
+    if (conversation !== undefined && conversation.conversation !== undefined) {
+      secureMode
+        ? getMessageFromSocket()
+        : getMessages(conversation?.conversation);
+    }
+    if (conversation !== undefined && conversation.conversation !== undefined)
+      isSecureModeAllowed(conversation);
   }, [conversation]);
 
   useEffect(() => {
     console.log(onEvent.type);
     if (onEvent?.type === "private_message") {
-      getMessages(conversation?.conversation);
+      secureMode
+        ? getMessageFromSocket(onEvent.message)
+        : getMessages(conversation?.conversation);
     }
   }, [onEvent]);
+
+  useEffect(() => {
+    if (conversation !== undefined && conversation.conversation !== undefined)
+      isSecureModeAllowed(conversation);
+  }, [onlineUsers]);
+
+  useEffect(() => {
+    if (secureMode) setLockColor("green");
+    else if (
+      conversation !== undefined &&
+      conversation.conversation !== undefined
+    )
+      isSecureModeAllowed(conversation);
+  }, [secureMode]);
 
   return (
     <div
@@ -98,6 +214,7 @@ const Homepage = ({ conversation, profile, socket, onEvent }) => {
               <Message
                 fromUser={profile.user.id == msg.sender_id}
                 text={msg.text}
+                encrypted={msg.encrypted !== undefined ? true : false}
               ></Message>
             ))}
           </div>
@@ -121,7 +238,9 @@ const Homepage = ({ conversation, profile, socket, onEvent }) => {
             </div>
             <Button
               onClick={() => {
-                sendMessage(conversation?.conversation);
+                secureMode
+                  ? sendEncryptedMessage(conversation?.conversation)
+                  : sendMessage(conversation?.conversation);
               }}
               className="bg-black"
               style={{ width: "15%", color: "white", alignItems: "center" }}
@@ -130,9 +249,8 @@ const Homepage = ({ conversation, profile, socket, onEvent }) => {
             </Button>
             <Button
               onClick={() => {
-                if (lockColor == "gray") {
-                  return;
-                }
+                console.log(!secureMode);
+                setSecure(!secureMode);
               }}
               className="bg-black"
               style={{

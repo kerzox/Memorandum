@@ -1,8 +1,7 @@
 import React from "react";
 import { Subtitle } from "../text/TextComponent";
 
-const Message = ({ fromUser, text }) => {
-  console.log(fromUser, text);
+const Message = ({ fromUser, text, encrypted }) => {
   return fromUser ? (
     <div
       className="bg-blue"
@@ -17,7 +16,10 @@ const Message = ({ fromUser, text }) => {
         wordWrap: "break-word",
       }}
     >
-      {text}
+      <div>
+        <Subtitle style={{ color: "white" }}>{text}</Subtitle>
+        {encrypted && <Subtitle style={{ color: "blue" }}>Encrypted</Subtitle>}
+      </div>
     </div>
   ) : (
     <div
@@ -35,6 +37,7 @@ const Message = ({ fromUser, text }) => {
       }}
     >
       <Subtitle style={{ color: "white" }}>{text}</Subtitle>
+      {encrypted && <Subtitle style={{ color: "blue" }}>Encrypted</Subtitle>}
     </div>
   );
 };

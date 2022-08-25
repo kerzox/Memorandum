@@ -17,48 +17,61 @@ const KeyAlert = ({ visible, setVisible, content }) => {
         justifyContent: "space-between",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
-        }}
-      >
+      <div>
         <div style={{ alignSelf: "center" }}>
           <strong>Important Infomation</strong>
-          <p>
-            Copy this data somewhere safe! Your private key will not be
-            recoverable
-          </p>
-          <ul style={{ display: "flex", flexDirection: "column", width: 400 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <p>
+              Copy this data somewhere safe! Your private key will not be
+              recoverable
+            </p>
+            <Button
+              onClick={() => setVisible(false)}
+              style={{
+                backgroundColor: "transparent",
+                width: 15,
+                cursor: "pointer",
+                color: "white",
+              }}
+            >
+              &times;
+            </Button>
+          </div>
+          <ul
+            style={{
+              display: "flex",
+              flexDirection: "column",
+
+              gap: 25,
+              padding: 0,
+            }}
+          >
             <li style={{ listStyle: "none", overflowX: "scroll" }}>
               <strong>Public key</strong>
-              <p className="shadow bg-dark" style={{ padding: 15 }}>
-                {content.publicKey}
-              </p>
+              <div
+                className="shadow bg-dark"
+                style={{ listStyle: "none", overflowX: "scroll", padding: 15 }}
+              >
+                {content.public_key}
+              </div>
             </li>
             <li style={{ listStyle: "none", overflowX: "scroll" }}>
               <strong>Private key</strong>
-              <p
+              <div
                 className="shadow bg-dark"
-                style={{ padding: 15, width: "auto" }}
+                style={{ listStyle: "none", overflowX: "scroll", padding: 15 }}
               >
-                {content.secretKey}
-              </p>
+                {content.private_key}
+              </div>
             </li>
           </ul>
         </div>
-        <Button
-          onClick={() => setVisible(false)}
-          style={{
-            backgroundColor: "transparent",
-            width: 15,
-            cursor: "pointer",
-            color: "white",
-          }}
-        >
-          &times;
-        </Button>
       </div>
       <div style={{ display: "flex", justifyContent: "center" }}></div>
     </div>

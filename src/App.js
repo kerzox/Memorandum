@@ -11,6 +11,13 @@ import Button from "./component/button";
 import FriendModal from "./component/friendModal";
 import nacl from "tweetnacl";
 import KeyAlert from "./component/key/alert";
+import { Buffer } from "buffer/";
+import {
+  generateKeyPairs,
+  fromBase64,
+  encodeMessage,
+  decodeMessage,
+} from "./secure/secure";
 
 function App() {
   const [socket, setSocket] = useState(null);
@@ -19,9 +26,9 @@ function App() {
   const [registerVisible, setRegisterVisible] = useState(false);
   const [friendModal, toggleFriendModal] = useState(false);
   const [friendModal2, toggleFriendModal2] = useState(false);
-
-  const [alert, toggleAlert] = useState(false);
+  const [alert1, toggleAlert] = useState(false);
   const [keys, setKeys] = useState();
+  const [onlineUsers, populateOnlineUsers] = useState([]);
 
   const [onEvent, updateEvents] = useState({
     type: "",
@@ -33,12 +40,14 @@ function App() {
   });
 
   useEffect(() => {
-    const newSocket = io(`http://neat.servebeer.com:25565`);
+    const newSocket = io(`http://neat.servebeer.com:27005`);
     setSocket(newSocket);
 
     newSocket.on("event", (event_data) => {
       updateEvents(event_data);
     });
+
+    newSocket.emit("get_online_users", {});
 
     return () => newSocket.close();
   }, []);
@@ -60,6 +69,9 @@ function App() {
 
       if (res.status === 200) {
         setUser(data);
+        console.log("LOGIN");
+        console.log(data);
+        setKeys((current) => ({ ...current, public_key: data.user.publicKey }));
       } else {
         alert(data.message);
       }
@@ -68,7 +80,10 @@ function App() {
 
   const register = async () => {
     try {
-      const pair = nacl.box.keyPair();
+      const pair = generateKeyPairs();
+
+      console.log(pair);
+
       let res = await fetch("http://neat.servebeer.com:25565/users/register", {
         method: "POST",
         headers: {
@@ -78,7 +93,7 @@ function App() {
         body: JSON.stringify({
           username: form.username,
           password: form.password,
-          publicKey: pair.publicKey,
+          publicKey: pair.public_key,
         }),
       });
       const data = await res.json();
@@ -86,22 +101,52 @@ function App() {
       console.log(data);
 
       if (res.status === 201) {
-        setKeys(pair);
+        setKeys({
+          public_key: pair.public_key,
+          private_key: pair.private_key,
+        });
+        toggleAlert(true);
       } else {
         alert(data.message);
       }
     } catch (err) {}
   };
 
+  const refreshUser = async (id) => {
+    try {
+      let res = await fetch(`http://neat.servebeer.com:25565/users/${id}`);
+      const data = await res.json();
+
+      if (res.status === 200) {
+        console.log(data);
+        setUser((current) => ({
+          ...current,
+          user: data,
+        }));
+      } else {
+        alert(data.message);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   useEffect(() => {
-    if (onEvent.type == "alert") {
+    if (onEvent.type === "alert") {
       alert(onEvent.message);
       console.log(onEvent.message);
+    } else if (onEvent.type === "update_users") {
+      console.log(onEvent.data);
+      populateOnlineUsers(onEvent.data);
+    } else if (onEvent.type === "refresh_user") {
+      console.log(profile.user);
+      refreshUser(profile.user.id);
     }
   }, [onEvent]);
 
   useEffect(() => {
     if (profile !== undefined) {
+      console.log(profile);
       socket.emit("newUser", profile.user);
     }
   }, [profile]);
@@ -118,6 +163,7 @@ function App() {
   useEffect(() => {
     if (keys !== undefined) {
       toggleAlert(true);
+      setConversationId(undefined);
     }
   }, [keys]);
 
@@ -141,6 +187,9 @@ function App() {
               setVisible={toggleFriendModal}
             ></FriendModal>
             <NavbarComponent
+              onlineUsers={onlineUsers}
+              keyAlert={{ alert1, toggleAlert }}
+              keyHandler={{ keys, setKeys }}
               onEvent={onEvent}
               socket={socket}
               chooseConversation={setConversationId}
@@ -153,10 +202,12 @@ function App() {
                   path="/"
                   element={
                     <Homepage
+                      keyHandler={{ keys, setKeys }}
                       onEvent={onEvent}
                       socket={socket}
                       conversation={selectedConversationId}
                       profile={profile}
+                      onlineUsers={onlineUsers}
                     />
                   }
                 />
@@ -176,14 +227,18 @@ function App() {
               right: 0,
               margin: "auto",
               backgroundColor: "#292929",
+              display: "flex",
+              flexDirection: "row",
             }}
           >
             <div
               style={{
+                flex: 1,
                 display: "flex",
                 flexDirection: "column",
                 gap: 15,
                 padding: 25,
+                height: "100%",
               }}
             >
               <Title style={{ color: "white" }}>Register</Title>
@@ -196,6 +251,7 @@ function App() {
                 }
               ></Input>
               <Input
+                type="password"
                 placeholder="password"
                 className="bg-dark"
                 onChange={(text) =>
@@ -221,7 +277,6 @@ function App() {
                 </Button>
               </div>
             </div>
-            <KeyAlert content={keys} visible={alert} setVisible={toggleAlert} />
           </div>
         ) : (
           <div
@@ -256,6 +311,7 @@ function App() {
                 }
               ></Input>
               <Input
+                type="password"
                 placeholder="password"
                 className="bg-dark"
                 onChange={(text) =>
