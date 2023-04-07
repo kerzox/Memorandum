@@ -94,18 +94,21 @@ const Homepage = ({
 
   const sendMessage = async (id) => {
     try {
-      let res = await fetch(`http://neat.servebeer.com:25565/messages/${id}`, {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: text,
-          sender_id: profile.user.id,
-          recipient_id: conversation.participants[1].id,
-        }),
-      });
+      let res = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/messages/${id}`,
+        {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text: text,
+            sender_id: profile.user.id,
+            recipient_id: conversation.participants[1].id,
+          }),
+        }
+      );
       const data = await res.json();
 
       if (res.status === 201) {
@@ -124,7 +127,9 @@ const Homepage = ({
 
   const getMessages = async (id) => {
     try {
-      let res = await fetch(`http://neat.servebeer.com:25565/messages/${id}`);
+      let res = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/messages/${id}`
+      );
       const data = await res.json();
 
       if (res.status === 200) {
@@ -250,7 +255,13 @@ const Homepage = ({
             <Button
               onClick={() => {
                 console.log(!secureMode);
-                setSecure(!secureMode);
+                if (lockColor === "orange") {
+                  setSecure(true);
+                } else if (lockColor === "green") {
+                  setSecure(false);
+                } else if (lockColor === "gray") {
+                  setSecure(false);
+                }
               }}
               className="bg-black"
               style={{

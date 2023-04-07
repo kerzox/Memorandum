@@ -31,7 +31,7 @@ const NavbarComponent = ({
   const createConversation = async (friendID, userId) => {
     try {
       let res = await fetch(
-        `http://neat.servebeer.com:25565/conversation/create`,
+        `${process.env.REACT_APP_SERVER_URL}/conversation/create`,
         {
           method: "POST",
           headers: {
@@ -60,7 +60,7 @@ const NavbarComponent = ({
   const openConversation = async (friendID, userId) => {
     try {
       let res = await fetch(
-        `http://neat.servebeer.com:25565/conversation/get?friend_id=${friendID}&user_id=${userId}`
+        `${process.env.REACT_APP_SERVER_URL}/conversation/get?friend_id=${friendID}&user_id=${userId}`
       );
       const data = await res.json();
 
@@ -78,7 +78,7 @@ const NavbarComponent = ({
   const getFriendRequests = async (id) => {
     try {
       let res = await fetch(
-        `http://neat.servebeer.com:25565/users/${id}/friendrequests`
+        `${process.env.REACT_APP_SERVER_URL}/users/${id}/friendrequests`
       );
       const data = await res.json();
       console.log(data);
@@ -93,7 +93,7 @@ const NavbarComponent = ({
   const getFriends = async (id) => {
     try {
       let res = await fetch(
-        `http://neat.servebeer.com:25565/users/${id}/friends`
+        `${process.env.REACT_APP_SERVER_URL}/users/${id}/friends`
       );
       const data = await res.json();
 
@@ -113,6 +113,7 @@ const NavbarComponent = ({
 
   useEffect(() => {
     if (onEvent?.type === "friend_request") {
+      console.log(onEvent);
       if (onEvent?.data.response) {
         getFriends(profile.user.id);
       } else {
@@ -188,6 +189,7 @@ const NavbarComponent = ({
               />
               {friendRequests.map((r) => (
                 <NewFriendAlert
+                  show={true}
                   socket={socket}
                   request={r}
                   profile={profile}
@@ -207,7 +209,7 @@ const NavbarComponent = ({
                   }}
                 ></NewFriendAlert>
               ))}
-              <div style={{ display: "flex", gap: 15 }}>
+              <div style={{ display: "flex", gap: 15, paddingTop: 15 }}>
                 <Button
                   onClick={() => toggleFriendModal(true)}
                   className="bg-black"

@@ -55,7 +55,7 @@ const Conversation = ({
 
   return (
     <Button
-      className="bg-dark"
+      className="bg-dark slideAlert"
       onClick={() => openConversation(friend.id, profile.user.id)}
       style={{
         textAlign: "left",

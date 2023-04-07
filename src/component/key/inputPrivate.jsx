@@ -21,7 +21,6 @@ const KeyAlertPrivate = ({ keys, setKeys, toggleAlert, profile, socket }) => {
       style={{
         padding: 25,
         color: "white",
-        transition: "opacity 0.6s",
         justifyContent: "space-between",
       }}
     >
@@ -70,7 +69,7 @@ const KeyAlertPrivate = ({ keys, setKeys, toggleAlert, profile, socket }) => {
                   const updateKeys = async (id, key) => {
                     try {
                       let res = await fetch(
-                        `http://neat.servebeer.com:25565/users/${id}/keys`,
+                        `${process.env.REACT_APP_SERVER_URL}/users/${id}/keys`,
                         {
                           method: "PUT",
                           headers: {

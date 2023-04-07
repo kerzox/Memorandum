@@ -18,6 +18,7 @@ import {
   encodeMessage,
   decodeMessage,
 } from "./secure/secure";
+import PopUpAlert from "./component/basicAlert";
 
 function App() {
   const [socket, setSocket] = useState(null);
@@ -30,6 +31,13 @@ function App() {
   const [keys, setKeys] = useState();
   const [onlineUsers, populateOnlineUsers] = useState([]);
 
+  const [inputPopup, setPopupData] = useState({
+    visible: false,
+    title: "",
+    content: "",
+    color: "",
+  });
+
   const [onEvent, updateEvents] = useState({
     type: "",
   });
@@ -40,7 +48,7 @@ function App() {
   });
 
   useEffect(() => {
-    const newSocket = io(`http://neat.servebeer.com:27005`);
+    const newSocket = io(`http://neatserver.ddns.net:27005`);
     setSocket(newSocket);
 
     newSocket.on("event", (event_data) => {
@@ -54,7 +62,7 @@ function App() {
 
   const login = async () => {
     try {
-      let res = await fetch("http://neat.servebeer.com:25565/users/login", {
+      let res = await fetch(`${process.env.REACT_APP_SERVER_URL}/users/login`, {
         method: "POST",
         headers: {
           accept: "application/json",
@@ -69,11 +77,17 @@ function App() {
 
       if (res.status === 200) {
         setUser(data);
-        console.log("LOGIN");
-        console.log(data);
-        setKeys((current) => ({ ...current, public_key: data.user.publicKey }));
+        setKeys((current) => ({
+          ...current,
+          public_key: data.user.publicKey,
+        }));
       } else {
-        alert(data.message);
+        setPopupData({
+          visible: true,
+          title: "Login Failed",
+          content: data.message,
+          color: "#e14444",
+        });
       }
     } catch (err) {}
   };
@@ -84,18 +98,21 @@ function App() {
 
       console.log(pair);
 
-      let res = await fetch("http://neat.servebeer.com:25565/users/register", {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: form.username,
-          password: form.password,
-          publicKey: pair.public_key,
-        }),
-      });
+      let res = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/users/register`,
+        {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: form.username,
+            password: form.password,
+            publicKey: pair.public_key,
+          }),
+        }
+      );
       const data = await res.json();
 
       console.log(data);
@@ -105,16 +122,27 @@ function App() {
           public_key: pair.public_key,
           private_key: pair.private_key,
         });
+        setPopupData({
+          visible: true,
+          title: "Register Success",
+          content: data.message,
+          color: "#44e170",
+        });
         toggleAlert(true);
       } else {
-        alert(data.message);
+        setPopupData({
+          visible: true,
+          title: "Register Failed",
+          content: data.message,
+          color: "#e14444",
+        });
       }
     } catch (err) {}
   };
 
   const refreshUser = async (id) => {
     try {
-      let res = await fetch(`http://neat.servebeer.com:25565/users/${id}`);
+      let res = await fetch(`${process.env.REACT_APP_SERVER_URL}/users/${id}`);
       const data = await res.json();
 
       if (res.status === 200) {
@@ -216,125 +244,209 @@ function App() {
           </>
         ) : registerVisible ? (
           <div
-            className="shadow"
             style={{
-              width: 550,
-              height: 325,
-              position: "absolute",
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              margin: "auto",
-              backgroundColor: "#292929",
               display: "flex",
-              flexDirection: "row",
+              flexDirection: "column",
+              width: "100%",
+              justifyContent: "center",
             }}
           >
+            <PopUpAlert visible={inputPopup.visible} setVisible={setPopupData}>
+              <div
+                className="shadow"
+                style={{
+                  alignSelf: "center",
+                  width: 550,
+                  backgroundColor: inputPopup.color,
+                }}
+              >
+                <div style={{ padding: 25 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <strong>{inputPopup.title}</strong>
+                    <Button
+                      onClick={() =>
+                        setPopupData((curr) => ({
+                          ...curr,
+                          visible: false,
+                        }))
+                      }
+                      style={{
+                        backgroundColor: "transparent",
+                        width: 15,
+                        cursor: "pointer",
+                        color: "white",
+                      }}
+                    >
+                      &times;
+                    </Button>
+                  </div>
+                  <p>{inputPopup.content}</p>
+                </div>
+              </div>
+            </PopUpAlert>
             <div
+              className="shadow"
               style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                gap: 15,
-                padding: 25,
-                height: "100%",
+                alignSelf: "center",
+                width: 550,
+                backgroundColor: "#292929",
               }}
             >
-              <Title style={{ color: "white" }}>Register</Title>
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 15,
+                  padding: 25,
+                  height: "100%",
+                }}
+              >
+                <Title style={{ color: "white" }}>Register</Title>
 
-              <Input
-                placeholder="username"
-                className="bg-dark"
-                onChange={(text) =>
-                  fillFormData((current) => ({ ...current, username: text }))
-                }
-              ></Input>
-              <Input
-                type="password"
-                placeholder="password"
-                className="bg-dark"
-                onChange={(text) =>
-                  fillFormData((current) => ({ ...current, password: text }))
-                }
-              ></Input>
-              <div style={{ display: "flex", gap: 25 }}>
-                <Button
-                  onClick={register}
-                  className="submitBtn"
-                  style={{ alignItems: "center", width: "25%" }}
-                >
-                  Send
-                </Button>
-                <Button
-                  onClick={() => setRegisterVisible(false)}
+                <Input
+                  placeholder="username"
                   className="bg-dark"
-                  style={{
-                    color: "white",
-                  }}
-                >
-                  Want to login?
-                </Button>
+                  onChange={(text) =>
+                    fillFormData((current) => ({ ...current, username: text }))
+                  }
+                ></Input>
+                <Input
+                  type="password"
+                  placeholder="password"
+                  className="bg-dark"
+                  onChange={(text) =>
+                    fillFormData((current) => ({ ...current, password: text }))
+                  }
+                ></Input>
+                <div style={{ display: "flex", gap: 25 }}>
+                  <Button
+                    onClick={register}
+                    className="submitBtn"
+                    style={{ alignItems: "center", width: "25%" }}
+                  >
+                    Send
+                  </Button>
+                  <Button
+                    onClick={() => setRegisterVisible(false)}
+                    className="bg-dark"
+                    style={{
+                      color: "white",
+                    }}
+                  >
+                    Want to login?
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         ) : (
           <div
-            className="shadow"
             style={{
-              width: 550,
-              height: 325,
-              position: "absolute",
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              margin: "auto",
-              backgroundColor: "#292929",
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              justifyContent: "center",
             }}
           >
+            <PopUpAlert visible={inputPopup.visible} setVisible={setPopupData}>
+              <div
+                className="shadow"
+                style={{
+                  alignSelf: "center",
+                  width: 550,
+                  backgroundColor: inputPopup.color,
+                }}
+              >
+                <div style={{ padding: 25 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <strong>{inputPopup.title}</strong>
+                    <Button
+                      onClick={() =>
+                        setPopupData((curr) => ({
+                          ...curr,
+                          visible: false,
+                        }))
+                      }
+                      style={{
+                        backgroundColor: "transparent",
+                        width: 15,
+                        cursor: "pointer",
+                        color: "white",
+                      }}
+                    >
+                      &times;
+                    </Button>
+                  </div>
+                  <p>{inputPopup.content}</p>
+                </div>
+              </div>
+            </PopUpAlert>
             <div
+              className="shadow"
               style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 15,
-                padding: 25,
+                alignSelf: "center",
+                width: 550,
+                backgroundColor: "#292929",
               }}
             >
-              <Title style={{ color: "white" }}>Login</Title>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 15,
+                  padding: 25,
+                }}
+              >
+                <Title style={{ color: "white" }}>Login</Title>
 
-              <Input
-                placeholder="username"
-                className="bg-dark"
-                onChange={(text) =>
-                  fillFormData((current) => ({ ...current, username: text }))
-                }
-              ></Input>
-              <Input
-                type="password"
-                placeholder="password"
-                className="bg-dark"
-                onChange={(text) =>
-                  fillFormData((current) => ({ ...current, password: text }))
-                }
-              ></Input>
-              <div style={{ display: "flex", gap: 25 }}>
-                <Button
-                  onClick={login}
-                  className="submitBtn"
-                  style={{ alignItems: "center", width: "25%" }}
-                >
-                  Send
-                </Button>
-                <Button
-                  onClick={() => setRegisterVisible(true)}
+                <Input
+                  placeholder="username"
                   className="bg-dark"
-                  style={{
-                    color: "white",
-                  }}
-                >
-                  Register an account
-                </Button>
+                  onChange={(text) =>
+                    fillFormData((current) => ({ ...current, username: text }))
+                  }
+                ></Input>
+                <Input
+                  type="password"
+                  placeholder="password"
+                  className="bg-dark"
+                  onChange={(text) =>
+                    fillFormData((current) => ({ ...current, password: text }))
+                  }
+                ></Input>
+                <div style={{ display: "flex", gap: 25 }}>
+                  <Button
+                    onClick={login}
+                    className="submitBtn"
+                    style={{ alignItems: "center", width: "25%" }}
+                  >
+                    Send
+                  </Button>
+                  <Button
+                    onClick={() => setRegisterVisible(true)}
+                    className="bg-dark"
+                    style={{
+                      color: "white",
+                    }}
+                  >
+                    Register an account
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

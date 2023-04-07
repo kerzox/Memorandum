@@ -13,7 +13,7 @@ const KeyAlert = ({ visible, setVisible, content }) => {
       style={{
         padding: 25,
         color: "white",
-        transition: "opacity 0.6s",
+
         justifyContent: "space-between",
       }}
     >

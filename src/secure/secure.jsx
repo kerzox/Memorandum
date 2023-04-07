@@ -20,9 +20,8 @@ const fromBase64 = (key) => {
 };
 
 const encodeMessage = (recipientPK, senderSK, msg) => {
-  console.log("Recipient PK: " + recipientPK);
-  console.log("Senders SK: " + senderSK);
-  console.log("Plain txt: " + msg);
+  if (senderSK === undefined)
+    alert("You must have a private key before sending encrypted messages");
   const shared = nacl.box.before(fromBase64(recipientPK), fromBase64(senderSK));
   const nonce = randomBytes(box.nonceLength);
 
@@ -36,6 +35,7 @@ const encodeMessage = (recipientPK, senderSK, msg) => {
 };
 
 const decodeMessage = (recipientSK, senderPK, encryptedMsg) => {
+  if (recipientSK === undefined) return encryptedMsg;
   console.log("Recipient SK: " + recipientSK);
   console.log("Senders PK: " + senderPK);
   console.log("Encrypted msg: " + encryptedMsg);

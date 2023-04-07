@@ -4,14 +4,14 @@ import { useEffect } from "react";
 import Button from "../button";
 import { Subtitle } from "../text/TextComponent";
 
-const NewFriendAlert = ({ request, update, profile, socket }) => {
-  const [visible, setVisible] = useState(true);
-  console.log(visible);
+const NewFriendAlert = ({ show, request, update, profile, socket }) => {
+  const [visible, setVisible] = useState(show);
+  console.log(show);
 
   const accept = async (username) => {
     try {
       let res = await fetch(
-        `http://neat.servebeer.com:25565/users/friend/${username}/accept`,
+        `${process.env.REACT_APP_SERVER_URL}/users/friend/${username}/accept`,
         {
           method: "POST",
           headers: {
@@ -36,11 +36,12 @@ const NewFriendAlert = ({ request, update, profile, socket }) => {
   };
 
   useEffect(() => {
-    setVisible(true);
+    setVisible(show);
   }, []);
 
   return visible ? (
     <div
+      className="popupAlert"
       style={{
         padding: 25,
         backgroundColor: "#2196F3",

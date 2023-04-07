@@ -12,7 +12,7 @@ const FriendModal = ({ visible, setVisible, profile, socket }) => {
   const addFriend = async (username) => {
     try {
       let res = await fetch(
-        `http://neat.servebeer.com:25565/users/friend/${username}`,
+        `${process.env.REACT_APP_SERVER_URL}/users/friend/${username}`,
         {
           method: "POST",
           headers: {
@@ -50,7 +50,7 @@ const FriendModal = ({ visible, setVisible, profile, socket }) => {
   const getUser = async (username) => {
     try {
       let res = await fetch(
-        `http://neat.servebeer.com:25565/users/${username}/profile`
+        `${process.env.REACT_APP_SERVER_URL}/users/${username}/profile`
       );
       const data = await res.json();
 
