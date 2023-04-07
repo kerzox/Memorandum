@@ -1,0 +1,21 @@
+{
+  "name": "socket",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "knex": "^2.2.0",
+    "moment": "^2.29.4",
+    "moment-timezone": "^0.5.35",
+    "mysql2": "^2.3.3",
+    "node-fetch": "^2.6.7",
+    "socket.io": "^4.5.1",
+    "socket.io-client": "^4.5.1"
+  },
+  "author": "",
+  "license": "ISC"
+}
