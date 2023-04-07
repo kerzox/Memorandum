@@ -48,7 +48,7 @@ function App() {
   });
 
   useEffect(() => {
-    const newSocket = io(`http://neatserver.ddns.net:27005`);
+    const newSocket = io(`${process.env.REACT_APP_SERVER_URL}:27005`);
     setSocket(newSocket);
 
     newSocket.on("event", (event_data) => {
